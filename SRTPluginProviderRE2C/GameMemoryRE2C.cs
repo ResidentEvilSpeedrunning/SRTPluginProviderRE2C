@@ -13,6 +13,8 @@ namespace SRTPluginProviderRE2C
 
         public byte PlayerCurrentHealth { get => _playerCurrentHealth; }
         internal byte _playerCurrentHealth;
+        public byte PlayerMaxHealth { get => _playerMaxHealth; }
+        internal byte _playerMaxHealth;
 
         public bool PlayerPoisoned { get => _playerPoisoned == 0x01; }
         internal byte _playerPoisoned;

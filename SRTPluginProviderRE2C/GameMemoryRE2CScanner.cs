@@ -16,6 +16,7 @@ namespace SRTPluginProviderRE2C
         // Addresses
         private int* AddressIGT = (int*)0;
         private int* AddressPlayerHP = (int*)0;
+        private int* AddressPlayerMaxHP = (int*)0;
         private int* AddressPlayerPoisoned = (int*)0;
         private int* AddressPlayerCharacter = (int*)0;
         private int* AddressSlots = (int*)0;
@@ -53,6 +54,7 @@ namespace SRTPluginProviderRE2C
                     {
                         AddressIGT = (int*)0x680588;
                         AddressPlayerHP = (int*)0x98A046;
+                        AddressPlayerMaxHP = (int*)0x98A052;
                         AddressPlayerPoisoned = (int*)0x98A109;
                         AddressPlayerCharacter = (int*)0x98EB24;
                         AddressSlots = (int*)0x98E9A4;
@@ -80,6 +82,9 @@ namespace SRTPluginProviderRE2C
             // Player HP
             fixed (byte* p = &gameMemoryValues._playerCurrentHealth)
                 memoryAccess.TryGetByteAt(AddressPlayerHP, p);
+
+            fixed (byte* p = &gameMemoryValues._playerMaxHealth)
+                memoryAccess.TryGetByteAt(AddressPlayerMaxHP, p);
 
             // Player Poison
             fixed (byte* p = &gameMemoryValues._playerPoisoned)
