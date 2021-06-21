@@ -1,4 +1,5 @@
 ﻿using SRTPluginProviderRE2C.Structs;
+using SRTPluginProviderRE2C.Structs.GameStructs;
 using System;
 
 namespace SRTPluginProviderRE2C
@@ -14,7 +15,7 @@ namespace SRTPluginProviderRE2C
         byte FASCount { get; }
         byte SaveCount { get; }
         byte EquippedItemId { get; }
-        InventoryEntry[] PlayerInventory { get; }
+        GameItemEntry[] PlayerInventory { get; }
         NPCInfo[] NPCs { get; }
 
         TimeSpan IGTTimeSpan { get; }

@@ -1,4 +1,5 @@
 ﻿using SRTPluginProviderRE2C.Structs;
+using SRTPluginProviderRE2C.Structs.GameStructs;
 using System;
 using System.Globalization;
 
@@ -37,8 +38,8 @@ namespace SRTPluginProviderRE2C
         public byte EquippedItemId { get => _equippedItemId; }
         internal byte _equippedItemId;
 
-        public InventoryEntry[] PlayerInventory { get => _playerInventory; }
-        internal InventoryEntry[] _playerInventory;
+        public GameItemEntry[] PlayerInventory { get => _playerInventory; }
+        internal GameItemEntry[] _playerInventory;
 
         public NPCInfo[] NPCs { get => _npcs; }
         internal NPCInfo[] _npcs;

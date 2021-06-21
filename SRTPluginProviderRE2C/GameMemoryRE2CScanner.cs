@@ -119,21 +119,11 @@ namespace SRTPluginProviderRE2C
 
             // Inventory
             if (gameMemoryValues._playerInventory == null)
-            {
-                gameMemoryValues._playerInventory = new InventoryEntry[MAX_ITEMS];
-                for (int i = 0; i < gameMemoryValues._playerInventory.Length; ++i)
-                    gameMemoryValues._playerInventory[i] = new InventoryEntry();
-            }
+                gameMemoryValues._playerInventory = new GameItemEntry[MAX_ITEMS];
+
             for (int i = 0; i < gameMemoryValues.AvailableSlots; ++i)
-            {
                 if (SafeReadByteArray(IntPtr.Add((IntPtr)AddressInventory, (i * 0x4)), sizeof(GameItemEntry), out byte[] ItemBytes))
-                {
-                    var inventoryEntry = GameItemEntry.AsStruct(ItemBytes);
-                    gameMemoryValues._playerInventory[i]._itemID = inventoryEntry.ItemId;
-                    gameMemoryValues._playerInventory[i]._quantity = inventoryEntry.StackSize;
-                    gameMemoryValues._playerInventory[i]._slotModifier = inventoryEntry.SlotModifier;
-                }
-            }
+                    gameMemoryValues._playerInventory[i] = GameItemEntry.AsStruct(ItemBytes);
 
             // NPCs
             //if (gameMemoryValues._npcs == null)
