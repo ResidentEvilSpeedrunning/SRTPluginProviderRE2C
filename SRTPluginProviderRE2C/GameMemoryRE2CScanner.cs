@@ -126,7 +126,7 @@ namespace SRTPluginProviderRE2C
             }
             for (int i = 0; i < gameMemoryValues.AvailableSlots; ++i)
             {
-                if (SafeReadByteArray(IntPtr.Add((IntPtr)AddressEquippedItemId, (i * 0x4)), sizeof(GameItemEntry), out byte[] ItemBytes))
+                if (SafeReadByteArray(IntPtr.Add((IntPtr)AddressInventory, (i * 0x4)), sizeof(GameItemEntry), out byte[] ItemBytes))
                 {
                     var inventoryEntry = GameItemEntry.AsStruct(ItemBytes);
                     gameMemoryValues._playerInventory[i]._itemID = inventoryEntry.ItemId;

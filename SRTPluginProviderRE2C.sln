@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.31321.278
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRTPluginProviderRE2C", "SRTPluginProviderRE2C\SRTPluginProviderRE2C.csproj", "{BD6B7010-D691-4D4B-909F-85B6FD901C79}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRTPluginBase", "..\SRTHost\SRTPluginBase\SRTPluginBase.csproj", "{072767E7-1163-4114-91E7-8E5ACE5B02DF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SRTPluginBase", "..\..\Squirrelies\SRTHost\SRTPluginBase\SRTPluginBase.csproj", "{072767E7-1163-4114-91E7-8E5ACE5B02DF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProcessMemory", "..\ProcessMemory\ProcessMemory\ProcessMemory.csproj", "{8E8D933C-EB38-4D7F-8AB5-028E48780200}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProcessMemory", "..\..\Squirrelies\ProcessMemory\ProcessMemory\ProcessMemory.csproj", "{8E8D933C-EB38-4D7F-8AB5-028E48780200}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
