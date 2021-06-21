@@ -37,8 +37,8 @@ namespace SRTPluginProviderRE2C
         public byte EquippedItemId { get => _equippedItemId; }
         internal byte _equippedItemId;
 
-        public InventoryItem[] PlayerInventory { get => _playerInventory; }
-        internal InventoryItem[] _playerInventory;
+        public InventoryEntry[] PlayerInventory { get => _playerInventory; }
+        internal InventoryEntry[] _playerInventory;
 
         public NPCInfo[] NPCs { get => _npcs; }
         internal NPCInfo[] _npcs;

@@ -1,11 +1,18 @@
 ﻿using ProcessMemory;
 using System;
 using System.Diagnostics;
+using SRTPluginProviderRE2C.Enumerations;
+using SRTPluginProviderRE2C.Structs;
+using SRTPluginProviderRE2C.Structs.GameStructs;
 
 namespace SRTPluginProviderRE2C
 {
     public unsafe class GameMemoryRE2CScanner : IDisposable
     {
+        private static readonly int MAX_ENTITIES = 32;
+        private static readonly int MAX_ITEMS = 10;
+        private static readonly int MAX_BOX_ITEMS = 8;
+
         // Variables
         private ProcessMemoryHandler memoryAccess;
         private GameMemoryRE2C gameMemoryValues;
@@ -110,16 +117,35 @@ namespace SRTPluginProviderRE2C
             fixed (byte* p = &gameMemoryValues._equippedItemId)
                 memoryAccess.TryGetByteAt(AddressEquippedItemId, p);
 
-            //// Inventory
-            //for (int i = 0; i < gameMemoryValues.AvailableSlots; ++i)
-            //{
+            // Inventory
+            if (gameMemoryValues._playerInventory == null)
+            {
+                gameMemoryValues._playerInventory = new InventoryEntry[MAX_ITEMS];
+                for (int i = 0; i < gameMemoryValues._playerInventory.Length; ++i)
+                    gameMemoryValues._playerInventory[i] = new InventoryEntry();
+            }
+            for (int i = 0; i < gameMemoryValues.AvailableSlots; ++i)
+            {
+                if (SafeReadByteArray(IntPtr.Add((IntPtr)AddressEquippedItemId, (i * 0x4)), sizeof(GameItemEntry), out byte[] ItemBytes))
+                {
+                    var inventoryEntry = GameItemEntry.AsStruct(ItemBytes);
+                    gameMemoryValues._playerInventory[i]._itemID = inventoryEntry.ItemId;
+                    gameMemoryValues._playerInventory[i]._quantity = inventoryEntry.StackSize;
+                    gameMemoryValues._playerInventory[i]._slotModifier = inventoryEntry.SlotModifier;
+                }
+            }
 
+            // NPCs
+            //if (gameMemoryValues._npcs == null)
+            //{
+            //    gameMemoryValues._npcs = new NPCInfo[MAX_ENTITIES];
+            //    for (int i = 0; i < gameMemoryValues._npcs.Length; ++i)
+            //        gameMemoryValues._npcs[i] = new NPCInfo();
             //}
-
-            //// NPCs
-            //for (int i = 0; i < 32; ++i)
+            //for (int i = 0; i < MAX_ENTITIES; ++i)
             //{
-
+            //    fixed (NPCInfo* p = &gameMemoryValues._npcs[i])
+            //        memoryAccess.TryGetByteArrayAt(AddressNPCs + (i * 0x4), 342, p);
             //}
 
             HasScanned = true;
@@ -130,6 +156,15 @@ namespace SRTPluginProviderRE2C
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
+
+        private unsafe bool SafeReadByteArray(IntPtr address, int size, out byte[] readBytes)
+        {
+            readBytes = new byte[size];
+            fixed (byte* p = readBytes)
+            {
+                return memoryAccess.TryGetByteArrayAt(address, size, p);
+            }
+        }
 
         protected virtual void Dispose(bool disposing)
         {

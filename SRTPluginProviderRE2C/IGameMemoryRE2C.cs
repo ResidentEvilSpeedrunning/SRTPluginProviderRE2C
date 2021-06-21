@@ -14,7 +14,7 @@ namespace SRTPluginProviderRE2C
         byte FASCount { get; }
         byte SaveCount { get; }
         byte EquippedItemId { get; }
-        InventoryItem[] PlayerInventory { get; }
+        InventoryEntry[] PlayerInventory { get; }
         NPCInfo[] NPCs { get; }
 
         TimeSpan IGTTimeSpan { get; }
