@@ -1,7 +1,6 @@
 ﻿using ProcessMemory;
 using System;
 using System.Diagnostics;
-using SRTPluginProviderRE2C.Enumerations;
 using SRTPluginProviderRE2C.Structs;
 using SRTPluginProviderRE2C.Structs.GameStructs;
 
@@ -11,7 +10,9 @@ namespace SRTPluginProviderRE2C
     {
         private static readonly int MAX_ENTITIES = 32;
         private static readonly int MAX_ITEMS = 10;
-        private static readonly int MAX_BOX_ITEMS = 8;
+        //private static readonly int MAX_BOX_ITEMS = 8;
+
+        private static DifficultyEnumeration CurrentDifficulty = DifficultyEnumeration.Easy;
 
         // Variables
         private ProcessMemoryHandler memoryAccess;
@@ -33,6 +34,9 @@ namespace SRTPluginProviderRE2C
         private int* AddressEquippedItemId = (int*)0;
         private int* AddressInventory = (int*)0;
         private int* AddressNPCs = (int*)0;
+        private int* AddressDifficulty = (int*)0;
+
+        private MultilevelPointer[] PointerEnemyList;
 
         internal GameMemoryRE2CScanner(Process process = null)
         {
@@ -51,6 +55,7 @@ namespace SRTPluginProviderRE2C
 
             int pid = GetProcessId(process).Value;
             memoryAccess = new ProcessMemoryHandler(pid);
+            PointerEnemyList = new MultilevelPointer[MAX_ENTITIES];
         }
 
         private bool SelectAddresses(GameVersion version)
@@ -71,6 +76,7 @@ namespace SRTPluginProviderRE2C
                         AddressEquippedItemId = (int*)0x691F6A;
                         AddressInventory = (int*)0x98ED34;
                         AddressNPCs = (int*)0x98A114;
+                        AddressDifficulty = (int*)0x291B87;
 
                         return true;
                     }
@@ -125,6 +131,26 @@ namespace SRTPluginProviderRE2C
                 if (SafeReadByteArray(IntPtr.Add((IntPtr)AddressInventory, (i * 0x4)), sizeof(GameItemEntry), out byte[] ItemBytes))
                     gameMemoryValues._playerInventory[i] = GameItemEntry.AsStruct(ItemBytes);
 
+            // Difficulty
+            if (SafeReadByteArray((IntPtr)AddressDifficulty, sizeof(DifficultyEntry), out byte[] DiffBytes))
+            {
+                gameMemoryValues._currentdifficulty = DifficultyEntry.AsStruct(DiffBytes);
+                CurrentDifficulty = gameMemoryValues.CurrentDifficulty.Difficulty;
+            }
+
+            // Enemies
+            if (gameMemoryValues._enemyHealth == null)
+                gameMemoryValues._enemyHealth = new NPCInfo[MAX_ENTITIES];
+
+            for (int i = 0; i < MAX_ENTITIES; ++i)
+            {
+                PointerEnemyList[i] = new MultilevelPointer(memoryAccess, IntPtr.Add((IntPtr)AddressNPCs, i * 0x4));
+                PointerEnemyList[i].UpdatePointers();
+                if (SafeReadByteArray(PointerEnemyList[i].Address, sizeof(NPCInfo), out byte[] EnemyBytes))
+                    gameMemoryValues._enemyHealth[i] = NPCInfo.AsStruct(EnemyBytes);
+            }
+                
+
             // NPCs
             //if (gameMemoryValues._npcs == null)
             //{
@@ -140,6 +166,11 @@ namespace SRTPluginProviderRE2C
 
             HasScanned = true;
             return gameMemoryValues;
+        }
+
+        public static DifficultyEnumeration GetCurrentDifficulty()
+        {
+            return CurrentDifficulty;
         }
 
         private int? GetProcessId(Process process) => process?.Id;

@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace SRTPluginProviderRE2C.Structs.GameStructs
 {
+    [DebuggerDisplay("{_DebuggerDisplay,nq}")]
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
 
     public unsafe struct GameItemEntry

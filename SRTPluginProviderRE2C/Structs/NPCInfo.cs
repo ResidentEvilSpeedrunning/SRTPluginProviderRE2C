@@ -1,7 +1,7 @@
 ﻿using SRTPluginProviderRE2C.Enumerations;
-using SRTPluginProviderRE2C.Structs.GameStructs;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 
 namespace SRTPluginProviderRE2C.Structs
 {
@@ -14,19 +14,19 @@ namespace SRTPluginProviderRE2C.Structs
         public NPCModelTypeEnumeration ModelType;
 
         [FieldOffset(0x38)]
-        public int X;
+        public int x;
 
         [FieldOffset(0x3C)]
-        public int Z;
+        public int z;
 
         [FieldOffset(0x40)]
-        public int Y;
+        public int y;
 
         [FieldOffset(0x76)]
-        public int RoomID;
+        public uint roomID;
 
         [FieldOffset(0x156)]
-        public short CurrentHP;
+        public ushort currentHP;
 
         public static NPCInfo AsStruct(byte[] data)
         {
@@ -44,174 +44,44 @@ namespace SRTPluginProviderRE2C.Structs
                 return string.Format("Model: {0} | HP: {1}", ModelType, CurrentHP);
             }
         }
+        public NPCModelTypeEnumeration EnemyType { get => ModelType; }
+        public string EnemyTypeString => ModelType.ToString();
+        public uint RoomID { get => roomID; }
+        public ushort CurrentHP { get => currentHP; }
+        public ushort MaximumHP => Enemy.GetHitPoints(this.ModelType);
+        public bool IsBoss => Enemy.IsBoss(this.ModelType);
+        public bool IsDead => CurrentHP == 0xFFFF;
+        public bool IsAlive => !IsDead && CurrentHP > 0 && CurrentHP < 30000;
+    }
 
-        private short GetMaximumHP(DifficultyEntry difficulty, ScenarioEntry scenario)
+    public class Enemy
+    {
+        public static Dictionary<NPCModelTypeEnumeration, ushort[]> MaxHitPoints = new Dictionary<NPCModelTypeEnumeration, ushort[]>() {
+            { NPCModelTypeEnumeration.ZombieBrad, new ushort[] { 0, 250, 1250 } },
+            { NPCModelTypeEnumeration.Croc, new ushort[] { 0, 300, 300 } },
+            { NPCModelTypeEnumeration.MrX1, new ushort[] { 0, 400, 600 } },
+            { NPCModelTypeEnumeration.MrX2, new ushort[] { 0, 200, 200 } },
+            { NPCModelTypeEnumeration.GEmbryo, new ushort[] { 400, 600, 1000 } },
+            { NPCModelTypeEnumeration.BirkinG1, new ushort[] { 0, 500, 800 } },
+            { NPCModelTypeEnumeration.BirkinG2, new ushort[] { 0, 700, 1200 } },
+            { NPCModelTypeEnumeration.BirkinG3, new ushort[] { 0, 900, 1400 } },
+            { NPCModelTypeEnumeration.BirkinG4, new ushort[] { 0, 1100, 1300 } },
+            { NPCModelTypeEnumeration.BirkinG5, new ushort[] { 0, 600, 1000 } }
+        };
+
+        public static ushort GetHitPoints(NPCModelTypeEnumeration npc)
         {
-            switch (this.ModelType)
+            var diff = GameMemoryRE2CScanner.GetCurrentDifficulty();
+            if (MaxHitPoints.ContainsKey(npc))
             {
-                case NPCModelTypeEnumeration.ZombieBrad:
-                    {
-                        if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                            return 0;
-                        else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                            return 250;
-                        else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                            return 1250;
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.Croc:
-                    {
-                        if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                            return 0;
-                        else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                            return 300;
-                        else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                            return 300;
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.MrX1: // Mr. X
-                    { // B-scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.B)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 0;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 400;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 600;
-                        }
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.MrX2: // Final tyrant fight.
-                    { // B-scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.B)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 0;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 200; // Verified on Leon B // Estimate (20200 - 19962 = 238, it was probably 200, the hard mode attempt i was probably supposed to move sooner. Ada dropped it right at 200 hp lost on boss when I was in the middle of the room.)
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 200; // Verified on Claire B // Estimate (20201 - 18461 = 1740, it is probably 1700 and my shot brought him lower). *** REVERIFY ***
-                        }
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.GEmbryo: // Chief Iron's Playhouse on Claire A. Chess Plug room on Leon A. 
-                    { // A-Scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.A)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 400; // Verified on Leon A
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 600; // Verified on Leon A and Claire A
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 1000; // Verified on Leon A
-                        }
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.BirkinG1: // Claire B's Chief Iron's Playhouse Birkin. Leon B's Plug Room Birkin.
-                    { // B-scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.B)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 0;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 500; // Verified on Leon B
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 800; // Verified on Claire B
-                        }
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.BirkinG2: // Leon A/Claire A's Train Birkin. Not encountered on Claire B. (Claw through train and when transforming, health is 5000-9000. Ignore drawing logic when HP > 1200)
-                    { // A-Scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.A)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 0;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 700; // Verified on Claire A
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 1200; // Verified on Leon A
-                        }
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.BirkinG3: // Claire B's Train Birkin. Not encountered on Leon A.
-                    { // B-Scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.B)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 0;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 900; // Verified on Leon B
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 1400; // Verified on Claire B
-                        }
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.BirkinG4: // "DOG" elevator stage.
-                    { // A-Scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.A)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 0;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 1100; // Verified on Claire A
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 1300; // Verified on Leon A
-                        }
-                        return 0;
-                    }
-
-                case NPCModelTypeEnumeration.BirkinG5: // Final train blob.
-                    { // B-Scenarios.
-                        if (scenario.Scenario == ScenarioEnumeration.B)
-                        {
-                            if (difficulty.Difficulty == DifficultyEnumeration.Easy)
-                                return 0;
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Normal)
-                                return 600; // Verified on Leon B
-                            else if (difficulty.Difficulty == DifficultyEnumeration.Hard)
-                                return 1000; // Verified on Claire B
-                        }
-                        return 0;
-                    }
-
-                default: // Undefined/Unknown
-                    {
-                        return 0;
-                    }
+                return MaxHitPoints[npc][(byte)diff];
             }
+            return 0;
         }
-        public bool GetIsBoss(DifficultyEntry difficulty)
-        {
-            switch (this.ModelType)
-            {
-                case NPCModelTypeEnumeration.ZombieBrad:
-                case NPCModelTypeEnumeration.Croc:
-                case NPCModelTypeEnumeration.MrX1: // Mr. X
-                case NPCModelTypeEnumeration.MrX2: // Final tyrant fight.
-                case NPCModelTypeEnumeration.GEmbryo: // Chief Iron's Playhouse on Claire A. Chess Plug room on Leon A.
-                case NPCModelTypeEnumeration.BirkinG1: // Claire B's Chief Iron's Playhouse Birkin. Leon B's Plug Room Birkin.
-                case NPCModelTypeEnumeration.BirkinG2: // Leon A/Claire A's Train Birkin. Not encountered on Claire B. (Claw through train and when transforming, health is 5000-9000. Ignore drawing logic when HP > 1200)
-                case NPCModelTypeEnumeration.BirkinG3: // Claire B's Train Birkin. Not encountered on Leon A.
-                case NPCModelTypeEnumeration.BirkinG4: // "DOG" elevator stage.
-                case NPCModelTypeEnumeration.BirkinG5: // Final train blob.
-                    {
-                        return true;
-                    }
 
-                default:
-                    {
-                        return false;
-                    }
-            }
+        public static bool IsBoss(NPCModelTypeEnumeration npc)
+        {
+            return MaxHitPoints.ContainsKey(npc);
         }
     }
 }

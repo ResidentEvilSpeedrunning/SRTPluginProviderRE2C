@@ -16,8 +16,8 @@ namespace SRTPluginProviderRE2C
         byte SaveCount { get; }
         byte EquippedItemId { get; }
         GameItemEntry[] PlayerInventory { get; }
-        NPCInfo[] NPCs { get; }
-
+        NPCInfo[] EnemyHealth { get; }
+        DifficultyEntry CurrentDifficulty { get; }
         TimeSpan IGTTimeSpan { get; }
         string IGTFormattedString { get; }
     }

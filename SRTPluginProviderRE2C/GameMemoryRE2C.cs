@@ -7,7 +7,7 @@ namespace SRTPluginProviderRE2C
 {
     public struct GameMemoryRE2C : IGameMemoryRE2C
     {
-        private const string IGT_TIMESPAN_STRING_FORMAT = @"hh\:mm\:ss\.fff";
+        private const string IGT_TIMESPAN_STRING_FORMAT = @"hh\:mm\:ss";
 
         public int IGT { get => _igt; }
         internal int _igt;
@@ -41,8 +41,11 @@ namespace SRTPluginProviderRE2C
         public GameItemEntry[] PlayerInventory { get => _playerInventory; }
         internal GameItemEntry[] _playerInventory;
 
-        public NPCInfo[] NPCs { get => _npcs; }
-        internal NPCInfo[] _npcs;
+        public NPCInfo[] EnemyHealth { get => _enemyHealth; }
+        internal NPCInfo[] _enemyHealth;
+
+        public DifficultyEntry CurrentDifficulty { get => _currentdifficulty; }
+        internal DifficultyEntry _currentdifficulty;
 
         // Public Properties - Calculated
         public TimeSpan IGTTimeSpan => TimeSpan.FromSeconds(IGT);
