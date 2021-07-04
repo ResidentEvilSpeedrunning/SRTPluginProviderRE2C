@@ -6,6 +6,8 @@ namespace SRTPluginProviderRE2C
 {
     public interface IGameMemoryRE2C
     {
+        string GameName { get; }
+        string VersionInfo { get; }
         int IGT { get; }
         byte PlayerCurrentHealth { get; }
         bool PlayerPoisoned { get; }
