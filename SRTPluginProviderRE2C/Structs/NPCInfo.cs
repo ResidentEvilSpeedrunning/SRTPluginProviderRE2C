@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace SRTPluginProviderRE2C.Structs
 {
     [DebuggerDisplay("{_DebuggerDisplay,nq}")]
-    [StructLayout(LayoutKind.Explicit, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x158)]
     public unsafe struct NPCInfo
     {
         // In-memory values
@@ -27,14 +27,6 @@ namespace SRTPluginProviderRE2C.Structs
 
         [FieldOffset(0x156)]
         public ushort currentHP;
-
-        public static NPCInfo AsStruct(byte[] data)
-        {
-            fixed (byte* pb = &data[0])
-            {
-                return *(NPCInfo*)pb;
-            }
-        }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public string _DebuggerDisplay

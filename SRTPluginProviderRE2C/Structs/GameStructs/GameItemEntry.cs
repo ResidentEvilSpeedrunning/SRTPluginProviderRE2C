@@ -6,21 +6,13 @@ using System.Runtime.InteropServices;
 namespace SRTPluginProviderRE2C.Structs.GameStructs
 {
     [DebuggerDisplay("{_DebuggerDisplay,nq}")]
-    [StructLayout(LayoutKind.Explicit, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x3)]
 
-    public unsafe struct GameItemEntry
+    public struct GameItemEntry
     {
         [FieldOffset(0x0)] private byte itemId;
         [FieldOffset(0x1)] private byte stackSize;
         [FieldOffset(0x2)] private byte slotModifier;
-
-        public static GameItemEntry AsStruct(byte[] data)
-        {
-            fixed (byte* pb = &data[0])
-            {
-                return *(GameItemEntry*)pb;
-            }
-        }
 
         // Public Properties
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

@@ -22,19 +22,21 @@ namespace SRTPluginProviderRE2C
         public int ProcessExitCode => (memoryAccess != null) ? memoryAccess.ProcessExitCode : 0;
 
         // Addresses
-        private int* AddressIGT = (int*)0;
-        private int* AddressPlayerHP = (int*)0;
-        private int* AddressPlayerMaxHP = (int*)0;
-        private int* AddressPlayerPoisoned = (int*)0;
-        private int* AddressPlayerCharacter = (int*)0;
-        private int* AddressSlots = (int*)0;
-        private int* AddressBodies = (int*)0;
-        private int* AddressFAS = (int*)0;
-        private int* AddressSaves = (int*)0;
-        private int* AddressEquippedItemId = (int*)0;
-        private int* AddressInventory = (int*)0;
-        private int* AddressNPCs = (int*)0;
-        private int* AddressDifficulty = (int*)0;
+        private int AddressIGT;
+        private int AddressPlayerHP;
+        private int AddressPlayerMaxHP;
+        private int AddressPlayerPoisoned;
+        private int AddressPlayerCharacter;
+        private int AddressSlots;
+        private int AddressBodies;
+        private int AddressFAS;
+        private int AddressSaves;
+        private int AddressEquippedItemId;
+        private int AddressInventory;
+        private int AddressNPCs;
+        private int AddressDifficulty;
+
+        private IntPtr BaseAddress { get; set; }
 
         private MultilevelPointer[] PointerEnemyList;
 
@@ -45,7 +47,7 @@ namespace SRTPluginProviderRE2C
                 Initialize(process);
         }
 
-        internal unsafe void Initialize(Process process)
+        internal void Initialize(Process process)
         {
             if (process == null)
                 return; // Do not continue if this is null.
@@ -55,6 +57,10 @@ namespace SRTPluginProviderRE2C
 
             int pid = GetProcessId(process).Value;
             memoryAccess = new ProcessMemoryHandler(pid);
+            if (ProcessRunning)
+            {
+                BaseAddress = NativeWrappers.GetProcessBaseAddress(pid, PInvoke.ListModules.LIST_MODULES_32BIT); // Bypass .NET's managed solution for getting this and attempt to get this info ourselves via PInvoke since some users are getting 299 PARTIAL COPY when they seemingly shouldn't.
+            }
             PointerEnemyList = new MultilevelPointer[MAX_ENTITIES];
         }
 
@@ -64,20 +70,19 @@ namespace SRTPluginProviderRE2C
             {
                 case GameVersion.re2C_Rebirth_1p10:
                     {
-                        AddressIGT = (int*)0x680588;
-                        AddressPlayerHP = (int*)0x98A046;
-                        AddressPlayerMaxHP = (int*)0x98A052;
-                        AddressPlayerPoisoned = (int*)0x98A109;
-                        AddressPlayerCharacter = (int*)0x98EB24;
-                        AddressSlots = (int*)0x98E9A4;
-                        AddressBodies = (int*)0x98E9B8;
-                        AddressFAS = (int*)0x98E9BA;
-                        AddressSaves = (int*)0x98E9BC;
-                        AddressEquippedItemId = (int*)0x691F6A;
-                        AddressInventory = (int*)0x98ED34;
-                        AddressNPCs = (int*)0x98A114;
-                        AddressDifficulty = (int*)0x291B87;
-
+                        AddressIGT = 0x280588;
+                        AddressPlayerHP = 0x58A046;
+                        AddressPlayerMaxHP = 0x58A052;
+                        AddressPlayerPoisoned = 0x58A109;
+                        AddressPlayerCharacter = 0x58EB24;
+                        AddressSlots = 0x58E9A4;
+                        AddressBodies = 0x58E9B8;
+                        AddressFAS = 0x58E9BA;
+                        AddressSaves = 0x58E9BC;
+                        AddressEquippedItemId = 0x291F6A;
+                        AddressInventory = 0x58ED34;
+                        AddressNPCs = 0x58A114;
+                        AddressDifficulty = 0x291B87;
                         return true;
                     }
             }
@@ -86,83 +91,36 @@ namespace SRTPluginProviderRE2C
             return false;
         }
 
-        internal unsafe IGameMemoryRE2C Refresh()
+        internal IGameMemoryRE2C Refresh()
         {
-            // IGT
-            fixed (int* p = &gameMemoryValues._igt)
-                memoryAccess.TryGetIntAt(AddressIGT, p);
-
-            // Player HP
-            fixed (byte* p = &gameMemoryValues._playerCurrentHealth)
-                memoryAccess.TryGetByteAt(AddressPlayerHP, p);
-
-            fixed (byte* p = &gameMemoryValues._playerMaxHealth)
-                memoryAccess.TryGetByteAt(AddressPlayerMaxHP, p);
-
-            // Player Poison
-            fixed (byte* p = &gameMemoryValues._playerPoisoned)
-                memoryAccess.TryGetByteAt(AddressPlayerPoisoned, p);
-
-            // Player Character
-            fixed (byte* p = &gameMemoryValues._playerCharacter)
-                memoryAccess.TryGetByteAt(AddressPlayerCharacter, p);
-
-            // Stats
-            fixed (byte* p = &gameMemoryValues._availableSlots)
-                memoryAccess.TryGetByteAt(AddressSlots, p);
-
-            fixed (byte* p = &gameMemoryValues._bodyCount)
-                memoryAccess.TryGetByteAt(AddressBodies, p);
-
-            fixed (byte* p = &gameMemoryValues._fasCount)
-                memoryAccess.TryGetByteAt(AddressFAS, p);
-
-            fixed (byte* p = &gameMemoryValues._saveCount)
-                memoryAccess.TryGetByteAt(AddressSaves, p);
-
-            fixed (byte* p = &gameMemoryValues._equippedItemId)
-                memoryAccess.TryGetByteAt(AddressEquippedItemId, p);
+            gameMemoryValues._igt = memoryAccess.GetIntAt(IntPtr.Add(BaseAddress, AddressIGT));
+            gameMemoryValues._playerCurrentHealth = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerHP));
+            gameMemoryValues._playerMaxHealth = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerMaxHP));
+            gameMemoryValues._playerPoisoned = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerPoisoned));
+            gameMemoryValues._playerCharacter = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerCharacter));
+            gameMemoryValues._availableSlots = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressSlots));
+            gameMemoryValues._bodyCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressBodies));
+            gameMemoryValues._fasCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressFAS));
+            gameMemoryValues._saveCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressSaves));
+            gameMemoryValues._equippedItemId = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressEquippedItemId));
 
             // Inventory
             if (gameMemoryValues._playerInventory == null)
                 gameMemoryValues._playerInventory = new GameItemEntry[MAX_ITEMS];
 
             for (int i = 0; i < gameMemoryValues.AvailableSlots; ++i)
-                if (SafeReadByteArray(IntPtr.Add((IntPtr)AddressInventory, (i * 0x4)), sizeof(GameItemEntry), out byte[] ItemBytes))
-                    gameMemoryValues._playerInventory[i] = GameItemEntry.AsStruct(ItemBytes);
+                gameMemoryValues._playerInventory[i] = memoryAccess.GetAt<GameItemEntry>(IntPtr.Add(BaseAddress + AddressInventory, (i * 0x4)));
 
             // Difficulty
-            if (SafeReadByteArray((IntPtr)AddressDifficulty, sizeof(DifficultyEntry), out byte[] DiffBytes))
-            {
-                gameMemoryValues._currentdifficulty = DifficultyEntry.AsStruct(DiffBytes);
-                CurrentDifficulty = gameMemoryValues.CurrentDifficulty.Difficulty;
-            }
+            gameMemoryValues._currentdifficulty = memoryAccess.GetAt<DifficultyEntry>(IntPtr.Add(BaseAddress, AddressDifficulty));
+            CurrentDifficulty = gameMemoryValues.CurrentDifficulty.Difficulty;
 
             // Enemies
             if (gameMemoryValues._enemyHealth == null)
                 gameMemoryValues._enemyHealth = new NPCInfo[MAX_ENTITIES];
 
             for (int i = 0; i < MAX_ENTITIES; ++i)
-            {
-                PointerEnemyList[i] = new MultilevelPointer(memoryAccess, IntPtr.Add((IntPtr)AddressNPCs, i * 0x4));
-                PointerEnemyList[i].UpdatePointers();
-                if (SafeReadByteArray(PointerEnemyList[i].Address, sizeof(NPCInfo), out byte[] EnemyBytes))
-                    gameMemoryValues._enemyHealth[i] = NPCInfo.AsStruct(EnemyBytes);
-            }
-                
-
-            // NPCs
-            //if (gameMemoryValues._npcs == null)
-            //{
-            //    gameMemoryValues._npcs = new NPCInfo[MAX_ENTITIES];
-            //    for (int i = 0; i < gameMemoryValues._npcs.Length; ++i)
-            //        gameMemoryValues._npcs[i] = new NPCInfo();
-            //}
-            //for (int i = 0; i < MAX_ENTITIES; ++i)
-            //{
-            //    fixed (NPCInfo* p = &gameMemoryValues._npcs[i])
-            //        memoryAccess.TryGetByteArrayAt(AddressNPCs + (i * 0x4), 342, p);
-            //}
+                gameMemoryValues._enemyHealth[i] = memoryAccess.GetAt<NPCInfo>(IntPtr.Add(BaseAddress + AddressNPCs, (i * 0x4)));
 
             HasScanned = true;
             return gameMemoryValues;
