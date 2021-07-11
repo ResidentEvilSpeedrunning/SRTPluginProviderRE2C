@@ -1,7 +1,9 @@
 ﻿using SRTPluginProviderRE2C.Structs;
 using SRTPluginProviderRE2C.Structs.GameStructs;
 using System;
+using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 
 namespace SRTPluginProviderRE2C
 {
@@ -9,19 +11,16 @@ namespace SRTPluginProviderRE2C
     {
         private const string IGT_TIMESPAN_STRING_FORMAT = @"hh\:mm\:ss";
 
+        public string GameName => "RE2";
+        public string VersionInfo => FileVersionInfo.GetVersionInfo(Assembly.GetExecutingAssembly().Location).FileVersion;
+
         public int IGT { get => _igt; }
         internal int _igt;
 
-        public byte PlayerCurrentHealth { get => _playerCurrentHealth; }
-        internal byte _playerCurrentHealth;
-        public byte PlayerMaxHealth { get => _playerMaxHealth; }
-        internal byte _playerMaxHealth;
+        public GamePlayer Player { get => _player; set => _player = value; }
+        internal GamePlayer _player;
 
-        public bool PlayerPoisoned { get => _playerPoisoned == 0x01; }
-        internal byte _playerPoisoned;
-
-        public byte PlayerCharacter { get => _playerCharacter; }
-        internal byte _playerCharacter;
+        public string PlayerName => Player.ID == 0 ? "Leon: " : "Claire: ";
 
         public byte AvailableSlots { get => _availableSlots; }
         internal byte _availableSlots;

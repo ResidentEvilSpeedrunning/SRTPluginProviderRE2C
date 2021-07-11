@@ -3,20 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace SRTPluginProviderRE2C.Structs.GameStructs
 {
-    [StructLayout(LayoutKind.Explicit, Pack = 1)]
+    [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 8)]
 
-    public unsafe struct DifficultyEntry
+    public struct DifficultyEntry
     {
         [FieldOffset(0x0)] private byte difficulty;
         [FieldOffset(0x7)] private byte isEasy;
-
-        public static DifficultyEntry AsStruct(byte[] data)
-        {
-            fixed (byte* pb = &data[0])
-            {
-                return *(DifficultyEntry*)pb;
-            }
-        }
 
         // Public Properties
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
