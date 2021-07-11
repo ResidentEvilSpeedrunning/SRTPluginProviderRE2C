@@ -24,9 +24,9 @@ namespace SRTPluginProviderRE2C
         // Addresses
         private int AddressIGT;
         private int AddressPlayerHP;
-        private int AddressPlayerMaxHP;
-        private int AddressPlayerPoisoned;
-        private int AddressPlayerCharacter;
+        //private int AddressPlayerMaxHP;
+        //private int AddressPlayerPoisoned;
+        //private int AddressPlayerCharacter;
         private int AddressSlots;
         private int AddressBodies;
         private int AddressFAS;
@@ -72,9 +72,9 @@ namespace SRTPluginProviderRE2C
                     {
                         AddressIGT = 0x280588;
                         AddressPlayerHP = 0x58A046;
-                        AddressPlayerMaxHP = 0x58A052;
-                        AddressPlayerPoisoned = 0x58A109;
-                        AddressPlayerCharacter = 0x58EB24;
+                        //AddressPlayerMaxHP = 0x58A052;
+                        //AddressPlayerPoisoned = 0x58A109;
+                        //AddressPlayerCharacter = 0x58EB24;
                         AddressSlots = 0x58E9A4;
                         AddressBodies = 0x58E9B8;
                         AddressFAS = 0x58E9BA;
@@ -94,10 +94,7 @@ namespace SRTPluginProviderRE2C
         internal IGameMemoryRE2C Refresh()
         {
             gameMemoryValues._igt = memoryAccess.GetIntAt(IntPtr.Add(BaseAddress, AddressIGT));
-            gameMemoryValues._playerCurrentHealth = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerHP));
-            gameMemoryValues._playerMaxHealth = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerMaxHP));
-            gameMemoryValues._playerPoisoned = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerPoisoned));
-            gameMemoryValues._playerCharacter = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressPlayerCharacter));
+            gameMemoryValues._player = memoryAccess.GetAt<GamePlayer>(IntPtr.Add(BaseAddress, AddressPlayerHP));
             gameMemoryValues._availableSlots = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressSlots));
             gameMemoryValues._bodyCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressBodies));
             gameMemoryValues._fasCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressFAS));

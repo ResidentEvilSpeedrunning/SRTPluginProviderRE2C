@@ -9,9 +9,8 @@ namespace SRTPluginProviderRE2C
         string GameName { get; }
         string VersionInfo { get; }
         int IGT { get; }
-        byte PlayerCurrentHealth { get; }
-        bool PlayerPoisoned { get; }
-        byte PlayerCharacter { get; }
+        GamePlayer Player { get; }
+        string PlayerName { get; }
         byte AvailableSlots { get; }
         byte BodyCount { get; }
         byte FASCount { get; }
