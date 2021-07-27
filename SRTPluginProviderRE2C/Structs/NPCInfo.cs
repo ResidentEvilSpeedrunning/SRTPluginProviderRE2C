@@ -44,6 +44,7 @@ namespace SRTPluginProviderRE2C.Structs
         public bool IsBoss => Enemy.IsBoss(this.ModelType);
         public bool IsDead => CurrentHP == 0xFFFF;
         public bool IsAlive => !IsDead && CurrentHP > 0 && CurrentHP < 30000;
+        public float Percentage => IsAlive && IsBoss ? (float)CurrentHP / (float)MaximumHP : 0f;
     }
 
     public class Enemy
