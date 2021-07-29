@@ -27,6 +27,8 @@ namespace SRTPluginProviderRE2C.Structs.GameStructs
                 Percentage >= 0.50 ? PlayerStatus.FineToo :
                 Percentage >= 0.25 ? PlayerStatus.FineToo : PlayerStatus.Danger;
         }
+
+        public string CurrentHealthState => HealthState.ToString();
     }
 
     public enum PlayerStatus
