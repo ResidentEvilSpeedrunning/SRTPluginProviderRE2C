@@ -8,9 +8,8 @@ namespace SRTPluginProviderRE2C
 {
     public unsafe class GameMemoryRE2CScanner : IDisposable
     {
-        private static readonly int MAX_ENTITIES = 32;
-        private static readonly int MAX_ITEMS = 10;
-        //private static readonly int MAX_BOX_ITEMS = 8;
+        private static readonly uint MAX_ENTITIES = 32U;
+        private static readonly uint MAX_ITEMS = 10U;
 
         private static DifficultyEnumeration CurrentDifficulty = DifficultyEnumeration.Easy;
 
@@ -19,24 +18,21 @@ namespace SRTPluginProviderRE2C
         private GameMemoryRE2C gameMemoryValues;
         public bool HasScanned;
         public bool ProcessRunning => memoryAccess != null && memoryAccess.ProcessRunning;
-        public int ProcessExitCode => (memoryAccess != null) ? memoryAccess.ProcessExitCode : 0;
+        public uint ProcessExitCode => (memoryAccess != null) ? memoryAccess.ProcessExitCode : 0U;
 
         // Addresses
-        private int AddressIGT;
-        private int AddressPlayerHP;
-        //private int AddressPlayerMaxHP;
-        //private int AddressPlayerPoisoned;
-        //private int AddressPlayerCharacter;
-        private int AddressSlots;
-        private int AddressBodies;
-        private int AddressFAS;
-        private int AddressSaves;
-        private int AddressEquippedItemId;
-        private int AddressInventory;
-        private int AddressNPCs;
-        private int AddressDifficulty;
+        private ulong AddressIGT;
+        private ulong AddressPlayerHP;
+        private ulong AddressSlots;
+        private ulong AddressBodies;
+        private ulong AddressFAS;
+        private ulong AddressSaves;
+        private ulong AddressEquippedItemId;
+        private ulong AddressInventory;
+        private ulong AddressNPCs;
+        private ulong AddressDifficulty;
 
-        private IntPtr BaseAddress { get; set; }
+        private nuint BaseAddress { get; set; }
 
         private MultilevelPointer[] PointerEnemyList;
 
@@ -55,11 +51,11 @@ namespace SRTPluginProviderRE2C
             if (!SelectAddresses(GameHashes.DetectVersion(process.MainModule.FileName)))
                 return; // Unknown version.
 
-            int pid = GetProcessId(process).Value;
+            uint pid = GetProcessId(process).Value;
             memoryAccess = new ProcessMemoryHandler(pid);
             if (ProcessRunning)
             {
-                BaseAddress = NativeWrappers.GetProcessBaseAddress(pid, PInvoke.ListModules.LIST_MODULES_32BIT); // Bypass .NET's managed solution for getting this and attempt to get this info ourselves via PInvoke since some users are getting 299 PARTIAL COPY when they seemingly shouldn't.
+                BaseAddress = (nuint)process.MainModule.BaseAddress.ToPointer();
             }
             PointerEnemyList = new MultilevelPointer[MAX_ENTITIES];
         }
@@ -72,9 +68,6 @@ namespace SRTPluginProviderRE2C
                     {
                         AddressIGT = 0x280588;
                         AddressPlayerHP = 0x58A046;
-                        //AddressPlayerMaxHP = 0x58A052;
-                        //AddressPlayerPoisoned = 0x58A109;
-                        //AddressPlayerCharacter = 0x58EB24;
                         AddressSlots = 0x58E9A4;
                         AddressBodies = 0x58E9B8;
                         AddressFAS = 0x58E9BA;
@@ -91,33 +84,45 @@ namespace SRTPluginProviderRE2C
             return false;
         }
 
+        internal static bool Reported = false;
         internal IGameMemoryRE2C Refresh()
         {
-            gameMemoryValues._igt = memoryAccess.GetIntAt(IntPtr.Add(BaseAddress, AddressIGT));
-            gameMemoryValues._player = memoryAccess.GetAt<GamePlayer>(IntPtr.Add(BaseAddress, AddressPlayerHP));
-            gameMemoryValues._availableSlots = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressSlots));
-            gameMemoryValues._bodyCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressBodies));
-            gameMemoryValues._fasCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressFAS));
-            gameMemoryValues._saveCount = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressSaves));
-            gameMemoryValues._equippedItemId = memoryAccess.GetByteAt(IntPtr.Add(BaseAddress, AddressEquippedItemId));
+            gameMemoryValues._igt = memoryAccess.GetIntAt((void*)(BaseAddress + AddressIGT));
+            gameMemoryValues._player = memoryAccess.GetAt<GamePlayer>((void*)(BaseAddress + AddressPlayerHP));
+            gameMemoryValues._availableSlots = memoryAccess.GetByteAt((void*)(BaseAddress + AddressSlots));
+            gameMemoryValues._bodyCount = memoryAccess.GetByteAt((void*)(BaseAddress + AddressBodies));
+            gameMemoryValues._fasCount = memoryAccess.GetByteAt((void*)(BaseAddress + AddressFAS));
+            gameMemoryValues._saveCount = memoryAccess.GetByteAt((void*)(BaseAddress + AddressSaves));
+            gameMemoryValues._equippedItemId = memoryAccess.GetByteAt((void*)(BaseAddress + AddressEquippedItemId));
 
             // Inventory
             if (gameMemoryValues._playerInventory == null)
                 gameMemoryValues._playerInventory = new GameItemEntry[MAX_ITEMS];
 
-            for (int i = 0; i < gameMemoryValues.AvailableSlots; ++i)
-                gameMemoryValues._playerInventory[i] = memoryAccess.GetAt<GameItemEntry>(IntPtr.Add(BaseAddress + AddressInventory, (i * 0x4)));
+            for (uint i = 0U; i < gameMemoryValues.AvailableSlots; ++i)
+                gameMemoryValues._playerInventory[i] = memoryAccess.GetAt<GameItemEntry>((void*)(BaseAddress + AddressInventory + (i * 0x4U)));
 
             // Difficulty
-            gameMemoryValues._currentdifficulty = memoryAccess.GetAt<DifficultyEntry>(IntPtr.Add(BaseAddress, AddressDifficulty));
+            gameMemoryValues._currentdifficulty = memoryAccess.GetAt<DifficultyEntry>((void*)(BaseAddress + AddressDifficulty));
             CurrentDifficulty = gameMemoryValues.CurrentDifficulty.Difficulty;
 
             // Enemies
             if (gameMemoryValues._enemyHealth == null)
                 gameMemoryValues._enemyHealth = new NPCInfo[MAX_ENTITIES];
 
-            for (int i = 0; i < MAX_ENTITIES; ++i)
-                gameMemoryValues._enemyHealth[i] = memoryAccess.GetAt<NPCInfo>(IntPtr.Add(BaseAddress + AddressNPCs, (i * 0x4)));
+            for (uint i = 0U; i < MAX_ENTITIES; ++i)
+            {
+                if (!Reported)
+                {
+                    Console.Write($"{nameof(BaseAddress)} = {BaseAddress:X}, ");
+                    Console.Write($"{nameof(AddressNPCs)} = {AddressNPCs:X}, ");
+                    Console.Write($"i * 0x4U = {i * 0x4U:X}, ");
+                    Console.Write($"Result = {BaseAddress + AddressNPCs + (i * 0x4U):X}.");
+                    Console.WriteLine();
+                    Reported = !Reported;
+                }
+                gameMemoryValues._enemyHealth[i] = memoryAccess.GetAt<NPCInfo>((void*)(memoryAccess.GetNUIntAt((void*)(BaseAddress + AddressNPCs + (i * 0x4U)))));
+            }
 
             HasScanned = true;
             return gameMemoryValues;
@@ -128,19 +133,10 @@ namespace SRTPluginProviderRE2C
             return CurrentDifficulty;
         }
 
-        private int? GetProcessId(Process process) => process?.Id;
+        private uint? GetProcessId(Process process) => (uint?)process?.Id;
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls
-
-        private unsafe bool SafeReadByteArray(IntPtr address, int size, out byte[] readBytes)
-        {
-            readBytes = new byte[size];
-            fixed (byte* p = readBytes)
-            {
-                return memoryAccess.TryGetByteArrayAt(address, size, p);
-            }
-        }
 
         protected virtual void Dispose(bool disposing)
         {
@@ -159,12 +155,6 @@ namespace SRTPluginProviderRE2C
                 disposedValue = true;
             }
         }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~REmake1Memory() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()

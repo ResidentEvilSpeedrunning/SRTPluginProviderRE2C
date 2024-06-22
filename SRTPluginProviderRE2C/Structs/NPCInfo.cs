@@ -7,26 +7,20 @@ namespace SRTPluginProviderRE2C.Structs
 {
     [DebuggerDisplay("{_DebuggerDisplay,nq}")]
     [StructLayout(LayoutKind.Explicit, Pack = 1, Size = 0x158)]
-    public unsafe struct NPCInfo
+    public struct NPCInfo
     {
         // In-memory values
-        [FieldOffset(0x08)]
-        public NPCModelTypeEnumeration ModelType;
+        [FieldOffset(0x8)] private NPCModelTypeEnumeration ModelType;
 
-        [FieldOffset(0x38)]
-        public int x;
+        [FieldOffset(0x38)] private int x;
 
-        [FieldOffset(0x3C)]
-        public int z;
+        [FieldOffset(0x3C)] private int z;
 
-        [FieldOffset(0x40)]
-        public int y;
+        [FieldOffset(0x40)] private int y;
 
-        [FieldOffset(0x76)]
-        public uint roomID;
+        [FieldOffset(0x76)] private uint roomID;
 
-        [FieldOffset(0x156)]
-        public ushort currentHP;
+        [FieldOffset(0x156)] private ushort currentHP;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public string _DebuggerDisplay
@@ -46,8 +40,7 @@ namespace SRTPluginProviderRE2C.Structs
         public bool IsAlive => !IsDead && CurrentHP > 0 && CurrentHP < 30000;
         public float Percentage => IsAlive && IsBoss ? (float)CurrentHP / (float)MaximumHP : 0f;
     }
-
-    public class Enemy
+    public static class Enemy
     {
         public static Dictionary<NPCModelTypeEnumeration, ushort[]> MaxHitPoints = new Dictionary<NPCModelTypeEnumeration, ushort[]>() {
             { NPCModelTypeEnumeration.ZombieBrad, new ushort[] { 0, 250, 1250 } },
